@@ -3,8 +3,6 @@ namespace VirtoCommerce.Storefront.Model.Features
     using System.Collections.Generic;
     using System.Linq;
 
-    using VirtoCommerce.Storefront.Model.Features.Exceptions;
-
     public static class FeatureExtensions
     {
         public static bool AnyConflictWith(this IReadOnlyCollection<Feature> features, string featureName)
@@ -28,7 +26,12 @@ namespace VirtoCommerce.Storefront.Model.Features
 
             if (result == null)
             {
-                throw new FeaturesException($"Can't find the future \"{featureName}\"");
+                return new Feature
+                {
+                    Name = featureName,
+                    IsActive = false
+                };
+                //throw new FeaturesException($"Can't find the feature \"{featureName}\"");
             }
 
             return result;
