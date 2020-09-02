@@ -89,6 +89,7 @@ namespace VirtoCommerce.LiquidThemeEngine
         /// </summary>
         public string CurrentThemeName => !string.IsNullOrEmpty(WorkContext.CurrentStore.ThemeName) ? WorkContext.CurrentStore.ThemeName : "default";
 
+        public string CurrentThemeFeaturesPath => Path.Combine(CurrentThemePath, "config", GetFeaturesFilePath());
         public string CurrentThemeSettingPath => Path.Combine(CurrentThemePath, "config", GetSettingsFilePath());
         public string CurrentThemeLocalePath => Path.Combine(CurrentThemePath, "locales");
         /// <summary>
@@ -361,13 +362,13 @@ namespace VirtoCommerce.LiquidThemeEngine
 
                 JObject result;
                 var baseThemeSettings = new JObject();
-                var currentThemeSettings = result = InnerGetAllSettings(_themeBlobProvider, CurrentThemeSettingPath);
+                var currentThemeSettings = result = ReadJsonData(_themeBlobProvider, CurrentThemeSettingPath);
 
                 //Try to load settings from base theme path and merge them with resources for local theme
                 if ((_options.MergeBaseSettings || currentThemeSettings == null) && !string.IsNullOrEmpty(BaseThemeSettingPath))
                 {
                     cacheItem.AddExpirationToken(new CompositeChangeToken(new[] { ThemeEngineCacheRegion.CreateChangeToken(), _themeBlobProvider.Watch(BaseThemeSettingPath) }));
-                    baseThemeSettings = InnerGetAllSettings(_themeBlobProvider, BaseThemeSettingPath);
+                    baseThemeSettings = ReadJsonData(_themeBlobProvider, BaseThemeSettingPath);
                 }
 
                 result = _options.MergeBaseSettings
@@ -458,7 +459,7 @@ namespace VirtoCommerce.LiquidThemeEngine
             return retVal;
         }
 
-        private static JObject InnerGetAllSettings(IContentBlobProvider themeBlobProvider, string settingsPath)
+        private static JObject ReadJsonData(IContentBlobProvider themeBlobProvider, string settingsPath)
         {
             if (settingsPath == null)
             {
@@ -500,7 +501,12 @@ namespace VirtoCommerce.LiquidThemeEngine
         private string GetSettingsFilePath()
         {
             var prefix = _httpContextAccessor.HttpContext.Request.Query["preview_mode"];
-            return prefix.ToString().IsNullOrEmpty() ? "settings_data.json" : $"drafts\\{prefix}_settings_data.json";
+            return prefix.ToString().IsNullOrEmpty() ? "settings_data.json" : $"drafts{Path.PathSeparator}{prefix}_settings_data.json";
+        }
+
+        private string GetFeaturesFilePath()
+        {
+            return "features.json";
         }
 
         public bool IsFeatureActive(string featureName)
@@ -510,7 +516,7 @@ namespace VirtoCommerce.LiquidThemeEngine
             return _memoryCache.GetOrCreateExclusive(cacheKey, cacheEntry =>
             {
                 var changeToken = ThemeEngineCacheRegion.CreateChangeToken();
-                var watchChangeToken = _themeBlobProvider.Watch(CurrentThemeSettingPath);
+                var watchChangeToken = _themeBlobProvider.Watch(CurrentThemeFeaturesPath);
                 var tokens = new[]
                            {
                                changeToken, watchChangeToken
@@ -518,7 +524,7 @@ namespace VirtoCommerce.LiquidThemeEngine
                 var compositeChangeToken = new CompositeChangeToken(tokens);
                 cacheEntry.AddExpirationToken(compositeChangeToken);
 
-                var settingJObject = InnerGetAllSettings(_themeBlobProvider, CurrentThemeSettingPath);
+                var settingJObject = ReadJsonData(_themeBlobProvider, CurrentThemeFeaturesPath);
                 var result = _featuresAgent.IsActive(featureName, settingJObject);
                 return result;
             });
