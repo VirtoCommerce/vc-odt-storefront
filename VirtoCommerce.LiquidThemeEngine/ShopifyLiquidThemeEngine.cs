@@ -492,10 +492,6 @@ namespace VirtoCommerce.LiquidThemeEngine
         {
             var prefix = _httpContextAccessor.HttpContext.Request.Query["preview_mode"];
             var result = prefix.ToString().IsNullOrEmpty() ? "settings_data.json" : $"drafts{Path.DirectorySeparatorChar}{prefix}_settings_data.json";
-            if (!_themeBlobProvider.PathExists(result))
-            {
-                result = "settings_data.json";
-            }
             return result;
         }
 

@@ -31,6 +31,10 @@ namespace VirtoCommerce.LiquidThemeEngine
         private static JObject ReadBaseSettings(JObject currentTheme, JObject baseTheme)
         {
             var baseThemeCurrent = baseTheme.GetValue("current");
+            if (baseThemeCurrent == null)
+            {
+                throw new StorefrontException("Base theme settings file is incorrect or not found");
+            }
             if (baseThemeCurrent is JObject result)
             {
                 return result;
