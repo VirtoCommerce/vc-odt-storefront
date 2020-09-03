@@ -54,7 +54,7 @@ namespace VirtoCommerce.Storefront.Model.Features
 
                 if (featuresJson == null)
                 {
-                    throw new FeaturesException($"Can't find \"{_featuresBranchToken}\" section");
+                    result = new List<Feature>();
                 }
                 else
                 {

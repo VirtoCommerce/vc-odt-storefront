@@ -2,7 +2,6 @@ namespace VirtoCommerce.Storefront.Model.Features
 {
     using System.Collections.Generic;
     using System.Linq;
-    using VirtoCommerce.Storefront.Model.Features.Exceptions;
 
     public static class FeatureExtensions
     {
@@ -27,7 +26,10 @@ namespace VirtoCommerce.Storefront.Model.Features
 
             if (result == null)
             {
-                throw new FeaturesException($"Can't find the feature \"{featureName}\"");
+                return new Feature
+                {
+                    IsActive = false
+                };
             }
 
             return result;
