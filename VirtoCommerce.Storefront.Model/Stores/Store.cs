@@ -92,6 +92,11 @@ namespace VirtoCommerce.Storefront.Model.Stores
         public string AdminEmail { get; set; }
 
         /// <summary>
+        /// Store base theme name
+        /// </summary>
+        public string BaseThemePath { get; set; }
+
+        /// <summary>
         /// Store theme name
         /// </summary>
         public string ThemeName { get; set; }

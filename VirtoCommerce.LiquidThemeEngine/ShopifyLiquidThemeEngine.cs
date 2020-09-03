@@ -90,21 +90,15 @@ namespace VirtoCommerce.LiquidThemeEngine
         public string CurrentThemeName => !string.IsNullOrEmpty(WorkContext.CurrentStore.ThemeName) ? WorkContext.CurrentStore.ThemeName : "default";
 
         public string CurrentThemeFeaturesPath => Path.Combine(CurrentThemePath, "config", GetFeaturesFilePath());
-        public string CurrentThemeSettingPath => Path.Combine(CurrentThemePath, "config", GetSettingsFilePath());
+        public string CurrentThemeSettingsPath => Path.Combine(CurrentThemePath, "config", GetSettingsFilePath());
         public string CurrentThemeLocalePath => Path.Combine(CurrentThemePath, "locales");
         /// <summary>
         /// The path for current theme 
         /// </summary>
         private string CurrentThemePath => Path.Combine("Themes", WorkContext.CurrentStore.Id, CurrentThemeName);
 
-        //Relative path to the discovery of theme resources that weren't found by the current path.
-        private string BaseThemePath =>
-            !string.IsNullOrEmpty(_options.BaseThemePath) ? Path.Combine("Themes", _options.BaseThemePath) :
-#pragma warning disable 618
-            // We need to use obsolete value here for backward compatibility.
-            !string.IsNullOrEmpty(_options.BaseThemeName) ? Path.Combine("Themes", _options.BaseThemeName, "default") : null;
-#pragma warning restore 618
-        private string BaseThemeSettingPath => BaseThemePath != null ? Path.Combine(BaseThemePath, "config", "settings_data.json") : null;
+        private string BaseThemePath => WorkContext.CurrentStore.BaseThemePath;
+        private string BaseThemeSettingsPath => BaseThemePath != null ? Path.Combine(BaseThemePath, "config", "settings_data.json") : null;
         public string BaseThemeLocalePath => BaseThemePath != null ? Path.Combine(BaseThemePath, "locales") : null;
 
 
@@ -221,7 +215,7 @@ namespace VirtoCommerce.LiquidThemeEngine
             var cacheKey = CacheKey.With(GetType(), "GetAssetHash", filePath);
             return _memoryCache.GetOrCreateExclusive(cacheKey, (cacheEntry) =>
             {
-                cacheEntry.AddExpirationToken(new CompositeChangeToken(new[] { ThemeEngineCacheRegion.CreateChangeToken(), _themeBlobProvider.Watch(filePath), _themeBlobProvider.Watch(CurrentThemeSettingPath) }));
+                cacheEntry.AddExpirationToken(new CompositeChangeToken(new[] { ThemeEngineCacheRegion.CreateChangeToken(), _themeBlobProvider.Watch(filePath), _themeBlobProvider.Watch(CurrentThemeSettingsPath) }));
 
                 using (var stream = GetAssetStreamAsync(filePath).GetAwaiter().GetResult())
                 {
@@ -355,27 +349,23 @@ namespace VirtoCommerce.LiquidThemeEngine
         /// <returns></returns>
         public IDictionary<string, object> GetSettings(string defaultValue = null)
         {
-            var cacheKey = CacheKey.With(GetType(), "GetSettings", CurrentThemeSettingPath, defaultValue);
+            var cacheKey = CacheKey.With(GetType(), "GetSettings", CurrentThemeSettingsPath, defaultValue);
             return _memoryCache.GetOrCreateExclusive(cacheKey, cacheItem =>
             {
-                cacheItem.AddExpirationToken(new CompositeChangeToken(new[] { ThemeEngineCacheRegion.CreateChangeToken(), _themeBlobProvider.Watch(CurrentThemeSettingPath) }));
+                cacheItem.AddExpirationToken(new CompositeChangeToken(new[] { ThemeEngineCacheRegion.CreateChangeToken(), _themeBlobProvider.Watch(CurrentThemeSettingsPath) }));
 
-                JObject result;
-                var baseThemeSettings = new JObject();
-                var currentThemeSettings = result = ReadJsonData(_themeBlobProvider, CurrentThemeSettingPath);
+                var baseSettings = string.IsNullOrEmpty(BaseThemeSettingsPath) ? null : ReadJsonData(_themeBlobProvider, BaseThemeSettingsPath);
+                var currentSettings = ReadJsonData(_themeBlobProvider, CurrentThemeSettingsPath);
 
-                //Try to load settings from base theme path and merge them with resources for local theme
-                if ((_options.MergeBaseSettings || currentThemeSettings == null) && !string.IsNullOrEmpty(BaseThemeSettingPath))
-                {
-                    cacheItem.AddExpirationToken(new CompositeChangeToken(new[] { ThemeEngineCacheRegion.CreateChangeToken(), _themeBlobProvider.Watch(BaseThemeSettingPath) }));
-                    baseThemeSettings = ReadJsonData(_themeBlobProvider, BaseThemeSettingPath);
-                }
+                var settings = (baseSettings != null)
+                    ? SettingsManager.Merge(baseSettings, currentSettings)
+                    : SettingsManager.ReadSettings(currentSettings);
 
-                result = _options.MergeBaseSettings
-                    ? SettingsManager.Merge(baseThemeSettings, currentThemeSettings ?? new JObject())
-                    : SettingsManager.ReadSettings(currentThemeSettings ?? new JObject()).CurrentPreset.Json;
+                var result = settings.ToObject<Dictionary<string, object>>()
+                    .ToDictionary(x => x.Key, x => x.Value)
+                    .WithDefaultValue(defaultValue);
 
-                return result.ToObject<Dictionary<string, object>>().ToDictionary(x => x.Key, x => x.Value).WithDefaultValue(defaultValue);
+                return result;
             });
         }
 
