@@ -44,19 +44,6 @@ namespace VirtoCommerce.Storefront.Controllers
         }
 
         /// <summary>
-        /// GET: /themes/settings.json
-        /// Return settings for current theme
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("themes/settings.json")]
-        [ResponseCache(CacheProfileName = "Default")]
-        public ActionResult GetThemeSettingsJson()
-        {
-            var retVal = _themeEngine.GetSettings();
-            return Json(retVal);
-        }
-
-        /// <summary>
         /// GET: /themes/assets/{*path}
         /// Handle theme assets requests
         /// </summary>
