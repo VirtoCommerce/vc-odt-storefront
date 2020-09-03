@@ -34,8 +34,10 @@ namespace VirtoCommerce.Storefront.Tests.LiquidThemeEngine
 
         private static JObject DefaultSettingsWithoutPresets => JObject.Parse(@"
         {
-            'background_color': '#fff',
-            'foreground_color': '#000'
+            'current': {
+                'background_color': '#fff',
+                'foreground_color': '#000'
+            }
         }
         ");
 
@@ -76,14 +78,20 @@ namespace VirtoCommerce.Storefront.Tests.LiquidThemeEngine
 
         private static JObject CurrentSettingsWithoutSelectedPreset => JObject.Parse(@"
         {
-            'foreground_color': '#333'
+            'current': {
+                'foreground_color': '#333'
+            }
         }
         ");
 
         private static JObject CurrentSettingsWithSelectedPreset => JObject.Parse(@"
         {
             'current': 'Dark',
-            'foreground_color': '#333'
+            'presets': {
+                'Dark': {
+                    'foreground_color': '#333'
+                }
+            }
         }
         ");
 
@@ -124,39 +132,6 @@ namespace VirtoCommerce.Storefront.Tests.LiquidThemeEngine
         }
 
         [Fact]
-        public void Settings_Inheritance_Backward_Compatibility_Base_Theme_Name()
-        {
-            var options = new LiquidThemeEngineOptions()
-            {
-#pragma warning disable 618
-                BaseThemeName = "odt"
-#pragma warning restore 618
-            };
-
-            Check_Inheritance_Backward_Compatibility(options);
-        }
-
-        [Fact]
-        public void Settings_Inheritance_Backward_Compatibility_Base_Theme_Path_Without_Merge()
-        {
-            var options = new LiquidThemeEngineOptions()
-            {
-                BaseThemePath = "odt\\default"
-            };
-
-            Check_Inheritance_Backward_Compatibility(options);
-        }
-
-        private void Check_Inheritance_Backward_Compatibility(LiquidThemeEngineOptions options)
-        {
-            var shopifyLiquidThemeEngine = GetThemeEngine(true, options);
-            InitializeStreams(DefaultThemeType.WithoutPresets, false);
-            var settings = shopifyLiquidThemeEngine.GetSettings();
-            Assert.False(settings.ContainsKey("background_color"));
-            Assert.Equal("#333", settings["foreground_color"]);
-        }
-
-        [Fact]
         public void Settings_Inheritance_Both_Are_Flat()
         {
             InitializeStreams(DefaultThemeType.WithoutPresets, false);
@@ -179,11 +154,7 @@ namespace VirtoCommerce.Storefront.Tests.LiquidThemeEngine
 
         private void Check_Colors_In_Merged_Settings(bool isDarkPreset = false)
         {
-            var options = new LiquidThemeEngineOptions()
-            {
-                BaseThemePath = "odt\\default",
-                MergeBaseSettings = true
-            };
+            var options = new LiquidThemeEngineOptions();
             var shopifyLiquidThemeEngine = GetThemeEngine(true, options);
             var settings = shopifyLiquidThemeEngine.GetSettings();
             Assert.Equal(isDarkPreset ? "#000" : "#fff", settings["background_color"]);
@@ -275,6 +246,7 @@ namespace VirtoCommerce.Storefront.Tests.LiquidThemeEngine
                     CurrentStore = new Store
                     {
                         Id = "odt",
+                        BaseThemePath = useThemesInheritance ? "Themes\\odt\\default" : null,
                         ThemeName = useThemesInheritance ? "current" : "default"
                     }
                 });
