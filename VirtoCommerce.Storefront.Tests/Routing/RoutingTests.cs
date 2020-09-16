@@ -14,7 +14,6 @@ using VirtoCommerce.Storefront.Model;
 using VirtoCommerce.Storefront.Model.Cart;
 using VirtoCommerce.Storefront.Model.Common;
 using VirtoCommerce.Storefront.Model.Recommendations;
-using VirtoCommerce.Storefront.Model.Security;
 using VirtoCommerce.Storefront.Tests.Routing.Infrastructure;
 using Xunit;
 
@@ -85,7 +84,7 @@ namespace VirtoCommerce.Storefront.Tests.Routing
             AddApiRequestRoute(routingData, "ApiCart", "RemoveCartCoupon", CustomHttpMethod.Delete, "storefrontapi/cart/coupons");
             AddApiRequestRoute(routingData, "ApiCart", "AddOrUpdateCartShipment", CustomHttpMethod.PostJson, "storefrontapi/cart/shipments", EmptyShipment);
             AddApiRequestRoute(routingData, "ApiCart", "AddOrUpdateCartPayment", CustomHttpMethod.PostJson, "storefrontapi/cart/payments", EmptyPayment);
-            AddApiRequestRoute(routingData, "ApiCart", "CreateOrder", CustomHttpMethod.PostJson, "storefrontapi/cart/createorder");
+            AddApiRequestRoute(routingData, "ApiCart", "CreateOrderFromDefaultCart", CustomHttpMethod.PostJson, "storefrontapi/cart/createorder");
             AddApiRequestRoute(routingData, "ApiCart", "AddOrUpdateCartPaymentPlan", CustomHttpMethod.PostJson, "storefrontapi/cart/paymentPlan");
 
             AddApiRequestRoute(routingData, "ApiCart", "DeleteCartPaymentPlan", CustomHttpMethod.Delete, "storefrontapi/cart/paymentPlan");
@@ -368,8 +367,8 @@ namespace VirtoCommerce.Storefront.Tests.Routing
         {
             yield return baseUrl;
             yield return $"en-US/{baseUrl}";
-            yield return $"Electronics/{baseUrl}";
-            yield return $"Electronics/en-US/{baseUrl}";
+            yield return $"odt/{baseUrl}";
+            yield return $"odt/en-US/{baseUrl}";
         }
 
         protected static void AddErrorRequestRoutes(ICollection<object[]> routingData, string expectedActionName, string baseUrl)

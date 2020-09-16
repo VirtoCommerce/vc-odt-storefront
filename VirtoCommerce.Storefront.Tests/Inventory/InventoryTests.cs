@@ -6,6 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Rest;
 using Moq;
 using VirtoCommerce.Storefront.AutoRestClients.InventoryModuleApi;
@@ -80,6 +81,10 @@ namespace VirtoCommerce.Storefront.Tests.Inventory
             var storefrontMemoryCache = CreateStorefrontMemoryCache();
 
             var apiChangesWatcherStub = new Mock<IApiChangesWatcher>();
+            apiChangesWatcherStub.Setup(x => x.CreateChangeToken()).Returns(() =>
+            {
+                return new CompositeChangeToken(new List<IChangeToken>());
+            });
             var result = new InventoryService(inventoryModuleStub.Object, storefrontMemoryCache, apiChangesWatcherStub.Object);
 
             return result;
