@@ -501,7 +501,9 @@ namespace VirtoCommerce.LiquidThemeEngine
         private string GetSettingsFilePath()
         {
             var prefix = _httpContextAccessor.HttpContext.Request.Query["preview_mode"];
-            return prefix.ToString().IsNullOrEmpty() ? "settings_data.json" : $"drafts{Path.DirectorySeparatorChar}{prefix}_settings_data.json";
+            return prefix.ToString().IsNullOrEmpty()
+                ? "settings_data.json"
+                : $"drafts{Path.DirectorySeparatorChar}{prefix}_settings_data.json";
         }
 
         private string GetFeaturesFilePath()

@@ -86,7 +86,7 @@ namespace VirtoCommerce.LiquidThemeEngine.Filters
                 var paramX = Expression.Parameter(elementType, "x");
                 var propInfo = elementType.GetProperty(propName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
                 var left = Expression.Property(paramX, propInfo);
-                var objValue = ParseString(value);
+                var objValue = ParseString(value, propInfo);
                 var right = Expression.Constant(objValue);
                 BinaryExpression binaryOp;
 
@@ -98,7 +98,7 @@ namespace VirtoCommerce.LiquidThemeEngine.Filters
                     binaryOp = Expression.GreaterThan(left, right);
                 else if (op.EqualsInvariant(">="))
                     binaryOp = Expression.GreaterThanOrEqual(left, right);
-                else if (op.EqualsInvariant("=<"))
+                else if (op.EqualsInvariant("<"))
                     binaryOp = Expression.LessThan(left, right);
                 else if (op.EqualsInvariant("contains"))
                 {
@@ -117,8 +117,10 @@ namespace VirtoCommerce.LiquidThemeEngine.Filters
                     //where(x=> x.Tags.Contains(y))
                     binaryOp = Expression.Equal(expr, Expression.Constant(true));
                 }
-                else
+                else if (op.EqualsInvariant("<="))
                     binaryOp = Expression.LessThanOrEqual(left, right);
+                else
+                    throw new ArgumentException($"Unknown operation {op}");
 
                 var delegateType = typeof(Func<,>).MakeGenericType(elementType, typeof(bool));
 
@@ -186,30 +188,33 @@ namespace VirtoCommerce.LiquidThemeEngine.Filters
             return retVal;
         }
 
-        private static object ParseString(string str)
+        private static object ParseString(string str, PropertyInfo propInfo)
         {
-            int intValue;
-            double doubleValue;
-            char charValue;
-            bool boolValue;
-            TimeSpan timespan;
-            DateTime dateTime;
-
             // Place checks higher if if-else statement to give higher priority to type.
-            if (int.TryParse(str, out intValue))
+            if (IsIntegralNumber(propInfo.PropertyType) && int.TryParse(str, out var intValue))
                 return intValue;
-            else if (double.TryParse(str, out doubleValue))
+            else if (IsRealNumber(propInfo.PropertyType) && double.TryParse(str, out var doubleValue))
                 return doubleValue;
-            else if (TimeSpan.TryParse(str, out timespan))
+            else if ((propInfo.PropertyType == typeof(TimeSpan)) && TimeSpan.TryParse(str, out var timespan))
                 return timespan;
-            else if (DateTime.TryParse(str, out dateTime))
+            else if ((propInfo.PropertyType == typeof(DateTime)) && DateTime.TryParse(str, out var dateTime))
                 return dateTime;
-            else if (char.TryParse(str, out charValue))
+            else if ((propInfo.PropertyType == typeof(char)) && char.TryParse(str, out var charValue))
                 return charValue;
-            else if (bool.TryParse(str, out boolValue))
+            else if ((propInfo.PropertyType == typeof(bool)) && bool.TryParse(str, out var boolValue))
                 return boolValue;
 
             return str;
+        }
+
+        private static bool IsIntegralNumber(Type type)
+        {
+            return new[] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong) }.Contains(type);
+        }
+
+        private static bool IsRealNumber(Type type)
+        {
+            return new[] { typeof(float), typeof(double), typeof(decimal) }.Contains(type);
         }
     }
 
