@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using VirtoCommerce.Storefront.Model.Cart;
 using VirtoCommerce.Storefront.Model.Catalog;
@@ -291,6 +292,7 @@ namespace VirtoCommerce.Storefront.Model
         /// This setting will be helpful especially when the AzureBlobStorage provider is used because of unable to monitor blob changes as well as for file system
         /// </summary>
         public bool IsPreviewMode { get; set; }
+        public IDictionary<string, string> Cookies { get; set; }
 
 
         #region IDisposable Implementation

@@ -357,8 +357,12 @@ namespace VirtoCommerce.LiquidThemeEngine.Filters
             var themeEngine = (ShopifyLiquidThemeEngine)context.TemplateLoader;
             var workContext = themeEngine.WorkContext;
 
-            var fullUrl = new Uri(workContext.RequestUrl, absoluteUrl);
+            var store = workContext.AllStores.FirstOrDefault(x =>
+                            string.Equals(x.Id, storeId, StringComparison.InvariantCultureIgnoreCase))
+                        ?? workContext.CurrentStore;
 
+            var baseUrl = store.Url.IsNullOrEmpty() || store.Url == "/" ? workContext.RequestUrl : new Uri(store.Url);
+            var fullUrl = new Uri(baseUrl, absoluteUrl);
             return fullUrl.AbsoluteUri;
         }
 

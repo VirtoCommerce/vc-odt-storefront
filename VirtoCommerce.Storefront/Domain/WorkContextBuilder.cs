@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Http;
 using VirtoCommerce.Storefront.Extensions;
@@ -17,6 +19,7 @@ namespace VirtoCommerce.Storefront.Domain
 
             WorkContext = new WorkContext
             {
+                Cookies = httpContext.Request.Cookies.ToList().ToDictionary(c => c.Key, c => c.Value),
                 RequestUrl = HttpContext.Request.GetUri(),
                 QueryString = qs,
                 PageNumber = qs["page"].ToNullableInt(),
