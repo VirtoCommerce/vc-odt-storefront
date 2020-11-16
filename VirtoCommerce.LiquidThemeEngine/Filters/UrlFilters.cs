@@ -361,7 +361,7 @@ namespace VirtoCommerce.LiquidThemeEngine.Filters
                             string.Equals(x.Id, storeId, StringComparison.InvariantCultureIgnoreCase))
                         ?? workContext.CurrentStore;
 
-            var baseUrl = store.Url.IsNullOrEmpty() ? workContext.RequestUrl : new Uri(store.Url);
+            var baseUrl = store.Url.IsNullOrEmpty() || store.Url == "/" ? workContext.RequestUrl : new Uri(store.Url);
             var fullUrl = new Uri(baseUrl, absoluteUrl);
             return fullUrl.AbsoluteUri;
         }

@@ -66,7 +66,7 @@ namespace VirtoCommerce.Storefront.Controllers
 
             var contentPage = (ContentPage)page;
             SetCurrentPage(contentPage);
-
+            
             return View(contentPage.Template, WorkContext);
         }
 
